@@ -19,10 +19,10 @@ var (
 	Deg   = scan.NewClassRule(scan.Rune('d', '°')).WithType(DegType)
 	Min   = scan.NewClassRule(scan.Rune('m', '\'', '′')).WithType(MinType)
 	Sec   = scan.NewClassRule(scan.Rune('s', '"', '″')).WithType(SecType)
-	East  = scan.NewClassRule(scan.Rune('e', 'E')).WithType(EastType)
-	North = scan.NewClassRule(scan.Rune('n', 'N')).WithType(NorthType)
-	South = scan.NewClassRule(scan.Rune('s', 'S')).WithType(SouthType)
-	West  = scan.NewClassRule(scan.Rune('w', 'W')).WithType(WestType)
+	East  = scan.NewClassRule(scan.Rune('E')).WithType(EastType)
+	North = scan.NewClassRule(scan.Rune('N')).WithType(NorthType)
+	South = scan.NewClassRule(scan.Rune('S')).WithType(SouthType)
+	West  = scan.NewClassRule(scan.Rune('W')).WithType(WestType)
 )
 
 type Context struct {

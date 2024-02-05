@@ -4,60 +4,85 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 )
 
 type Angle struct {
-	Sign int
+	Sign string
 	Deg  string
 	Min  string
 	Sec  string
 	Hemi string
 }
 
-func (a Angle) AsLat() (Angle, error) {
-	if a.Hemi != "" && a.Hemi != NorthType && a.Hemi != SouthType {
-		return Angle{}, fmt.Errorf("invalid hemisphere: %v", a.Hemi)
+func NewAngle(sign string, deg string, min string, sec string, hemi string) Angle {
+	return Angle{
+		Sign: sign,
+		Deg:  deg,
+		Min:  min,
+		Sec:  sec,
+		Hemi: hemi,
 	}
-	if a.Sign < 0 {
-		a.Hemi = SouthType
-	} else if a.Sign >= 0 {
-		a.Sign = 1
-		a.Hemi = NorthType
-	}
-	return a, nil
 }
 
-func (a Angle) AsLon() (Angle, error) {
-	if a.Hemi != "" && a.Hemi != EastType && a.Hemi != WestType {
-		return Angle{}, fmt.Errorf("invalid hemisphere: %v", a.Hemi)
+func (a Angle) AsLat() Angle {
+	if a.Hemi != "" {
+		return a
 	}
-	if a.Sign < 0 {
+	if a.Sign == "-" {
+		a.Hemi = SouthType
+	} else {
+		a.Hemi = NorthType
+	}
+	a.Sign = ""
+	return a
+}
+
+func (a Angle) AsLon() Angle {
+	if a.Hemi != "" {
+		return a
+	}
+	if a.Sign == "-" {
 		a.Hemi = WestType
-	} else if a.Sign >= 0 {
-		a.Sign = 1
+	} else {
 		a.Hemi = EastType
 	}
-	return a, nil
+	a.Sign = ""
+	return a
 }
 
 func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, err error) {
+	switch a.Sign {
+	case "-":
+		sign = -1
+	case "+":
+		sign = 1
+	case "":
+		sign = 0
+	default:
+		err = fmt.Errorf("invalid sign: %v", a.Sign)
+		return
+	}
+
 	if a.Deg != "" {
 		deg, err = strconv.ParseFloat(a.Deg, 64)
 		if err != nil {
 			err = fmt.Errorf("invalid degrees: %v", a.Deg)
 			return
 		}
-		if a.Sign == 1 && deg < 0 {
+		if a.Sign == "+" && deg < 0 {
 			err = fmt.Errorf("sign is positive but degrees are negative: %v", deg)
 			return
 		}
-		if a.Sign != 0 {
+		if a.Sign != "" {
 			deg = math.Abs(deg)
 		}
 	}
 
 	if a.Min != "" {
+		if deg != math.Trunc(deg) {
+			err = fmt.Errorf("decimal degrees %v with minutes %v", a.Deg, a.Min)
+			return
+		}
 		min, err = strconv.ParseFloat(a.Min, 64)
 		if err != nil {
 			err = fmt.Errorf("invalid minutes: %v", a.Min)
@@ -70,6 +95,10 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 	}
 
 	if a.Sec != "" {
+		if min != math.Trunc(min) {
+			err = fmt.Errorf("decimal minutes %v with seconds %v", a.Min, a.Sec)
+			return
+		}
 		sec, err = strconv.ParseFloat(a.Sec, 64)
 		if err != nil {
 			err = fmt.Errorf("invalid seconds: %v", a.Sec)
@@ -81,17 +110,14 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 		}
 	}
 
-	sign = float64(a.Sign)
 	if a.Hemi != "" {
 		if a.Hemi != NorthType && a.Hemi != SouthType && a.Hemi != EastType && a.Hemi != WestType {
 			err = fmt.Errorf("invalid hemisphere: %v", a.Hemi)
 			return
 		}
-		if a.Sign == -1 && a.Hemi != SouthType && a.Hemi != WestType {
-			err = fmt.Errorf("hemisphere mismatch: '-' and '%v'", a.Hemi)
-		}
-		if a.Sign == 1 && a.Hemi != NorthType && a.Hemi != EastType {
-			err = fmt.Errorf("hemisphere mismatch: '+' and '%v'", a.Hemi)
+		if a.Sign != "" {
+			err = fmt.Errorf("only one of '%v' and '%v' allowed", a.Sign, a.Hemi)
+			return
 		}
 	}
 	if sign == 0 {
@@ -100,31 +126,21 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 			sign = -1
 		}
 	}
+
+	deg, min, sec = normalizeFloats(deg, min, sec)
 	return
 }
 
-func (a Angle) String() string {
-	var buf strings.Builder
-	if a.Sign < 0 && a.Hemi == "" {
-		buf.WriteRune('-')
+func normalizeFloats(deg, min, sec float64) (float64, float64, float64) {
+	if ideg, fdeg := math.Modf(deg); fdeg != 0 && min == 0 && sec == 0 {
+		deg = ideg
+		min = math.Abs(fdeg) * 60
 	}
-	buf.WriteString(a.Deg)
-	buf.WriteRune('°')
-	if a.Min != "" {
-		buf.WriteRune(' ')
-		buf.WriteString(a.Min)
-		buf.WriteRune('′')
-		if a.Sec != "" {
-			buf.WriteRune(' ')
-			buf.WriteString(a.Sec)
-			buf.WriteRune('″')
-		}
+	if imin, fmin := math.Modf(min); fmin != 0 && sec == 0 {
+		min = imin
+		sec = math.Abs(fmin) * 60
 	}
-	if a.Hemi != "" {
-		buf.WriteRune(' ')
-		buf.WriteString(a.Hemi)
-	}
-	return buf.String()
+	return deg, min, sec
 }
 
 func (a Angle) ToDegrees() float64 {

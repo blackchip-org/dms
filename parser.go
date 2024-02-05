@@ -62,20 +62,8 @@ func (p *Parser) Parse(v string) (Angle, error) {
 		}
 	}
 
-	if a.Hemi != "" {
-		if (a.Hemi == NorthType || a.Hemi == EastType) && a.Sign == -1 {
-			return Angle{}, NewError(first, `hemisphere mismatch: "-" with %v`, scan.Quote(a.Hemi))
-		}
-		if (a.Hemi == SouthType || a.Hemi == WestType) && a.Sign == 1 {
-			return Angle{}, NewError(first, `hemisphere mismatch: "+" with %v`, scan.Quote(a.Hemi))
-		}
-	}
-	if a.Hemi == SouthType || a.Hemi == WestType {
-		a.Sign = -1
-	} else if a.Hemi == NorthType || a.Hemi == EastType {
-		a.Sign = 1
-	} else if a.Sign == 0 {
-		a.Sign = 1
+	if a.Sign != "" && a.Hemi != "" {
+		return Angle{}, NewError(first, `only one of %v or %v allowed`, scan.Quote(a.Sign), scan.Quote(a.Hemi))
 	}
 
 	tok := r.This
@@ -91,10 +79,10 @@ func parseSign(r *scan.Runner, a *Angle) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case "+":
-		a.Sign = 1
+		a.Sign = "+"
 		r.Scan()
 	case "-":
-		a.Sign = -1
+		a.Sign = "-"
 		r.Scan()
 	}
 	return 1, nil

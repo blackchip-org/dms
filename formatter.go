@@ -2,6 +2,7 @@ package dms
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -46,35 +47,59 @@ func (f Formatter) WithSep(sep string) Formatter {
 	return f
 }
 
-func (f Formatter) Format(a Angle) string {
-	sign, deg, min, sec, err := a.ToFloats()
-	if err != nil {
-		panic(err)
-	}
-
+func (f Formatter) format(sign float64, deg float64, min float64, sec float64, hemi string) string {
 	var buf strings.Builder
 	if f.Sign {
-		if sign == -1 {
+		if sign == -1 || hemi == SouthType || hemi == WestType {
 			buf.WriteRune('-')
 		}
 	}
 
+	deg, min, sec = normalizeFloats(deg, min, sec)
 	func() {
 		if f.To == DegType {
-			degs := sign * (deg + (min / 60) + (sec / 3600))
+			degs := deg + (min / 60) + (sec / 3600)
 			fmt.Fprintf(&buf, "%.*f%v", f.Places, degs, f.Deg)
 			return
 		}
 		fmt.Fprintf(&buf, "%v%v%v", deg, f.Deg, f.Sep)
 		if f.To == MinType {
-			mins := sign * (min + (sec / 60))
+			mins := min + (sec / 60)
 			fmt.Fprintf(&buf, "%.*f%v", f.Places, mins, f.Min)
 			return
 		}
 		fmt.Fprintf(&buf, "%v%v%v%.*f%v", min, f.Min, f.Sep, f.Places, sec, f.Sec)
 	}()
-	if !f.Sign && a.Hemi != "" {
-		fmt.Fprintf(&buf, "%v%v", f.Sep, a.Hemi)
+	if !f.Sign && hemi != "" {
+		fmt.Fprintf(&buf, "%v%v", f.Sep, hemi)
 	}
 	return buf.String()
+}
+
+func (f Formatter) Format(a Angle) string {
+	sign, deg, min, sec, err := a.ToFloats()
+	if err != nil {
+		panic(err)
+	}
+	return f.format(sign, deg, min, sec, a.Hemi)
+}
+
+func (f Formatter) FormatLat(d float64, m float64, s float64) string {
+	hemi := NorthType
+	sign := float64(1)
+	if d < 0 {
+		hemi = SouthType
+		sign = -1
+	}
+	return f.format(sign, math.Abs(d), math.Abs(m), math.Abs(s), hemi)
+}
+
+func (f Formatter) FormatLon(d float64, m float64, s float64) string {
+	hemi := EastType
+	sign := float64(1)
+	if d < 0 {
+		hemi = WestType
+		sign = -1
+	}
+	return f.format(sign, math.Abs(d), math.Abs(m), math.Abs(s), hemi)
 }
