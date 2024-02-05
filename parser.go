@@ -20,7 +20,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%v: %v", e.Pos, e.Message)
 }
 
-var stateMachine = []func(*scan.Runner, *Angle) (int, error){
+var stateMachine = []func(*scan.Runner, *Parsed) (int, error){
 	parseSign,       // S0
 	parseDegNum,     // S1
 	parseDegIntSym,  // S2
@@ -43,11 +43,10 @@ func NewDefaultParser() *Parser {
 	return NewParser(NewContext())
 }
 
-func (p *Parser) Parse(v string) (Angle, error) {
-	var a Angle
+func (p *Parser) Parse(v string) (Parsed, error) {
+	var a Parsed
 	p.scanner.InitFromString("", v)
 	r := scan.NewRunner(&p.scanner, p.ctx.RuleSet)
-	first := r.This
 
 	var state int
 	var err error
@@ -55,41 +54,45 @@ func (p *Parser) Parse(v string) (Angle, error) {
 		parse := stateMachine[state]
 		state, err = parse(r, &a)
 		if err != nil {
-			return Angle{}, err
+			return Parsed{}, err
 		}
 		if state == -1 {
 			break
 		}
 	}
 
-	if a.Sign != "" && a.Hemi != "" {
-		return Angle{}, NewError(first, `only one of %v or %v allowed`, scan.Quote(a.Sign), scan.Quote(a.Hemi))
-	}
-
 	tok := r.This
 	if !tok.IsEndOfText() {
-		return Angle{}, NewError(tok, "unexpected %v", scan.Quote(tok.Lit))
+		return Parsed{}, NewError(tok, "unexpected %v", scan.Quote(tok.Lit))
 	}
 
 	return a, nil
 }
 
+func (p *Parser) ParseAngle(v string) (Angle, error) {
+	parsed, err := p.Parse(v)
+	if err != nil {
+		return Angle{}, err
+	}
+	return NewAngleFromParsed(parsed), nil
+}
+
 // S0
-func parseSign(r *scan.Runner, a *Angle) (int, error) {
+func parseSign(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case "+":
-		a.Sign = "+"
+		a.Hemi = "+"
 		r.Scan()
 	case "-":
-		a.Sign = "-"
+		a.Hemi = "-"
 		r.Scan()
 	}
 	return 1, nil
 }
 
 // S1
-func parseDegNum(r *scan.Runner, a *Angle) (int, error) {
+func parseDegNum(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -113,7 +116,7 @@ func parseDegNum(r *scan.Runner, a *Angle) (int, error) {
 }
 
 // S2
-func parseDegIntSym(r *scan.Runner, a *Angle) (int, error) {
+func parseDegIntSym(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
@@ -124,7 +127,7 @@ func parseDegIntSym(r *scan.Runner, a *Angle) (int, error) {
 }
 
 // S3
-func parseRealIntSym(r *scan.Runner, a *Angle) (int, error) {
+func parseRealIntSym(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
@@ -135,7 +138,7 @@ func parseRealIntSym(r *scan.Runner, a *Angle) (int, error) {
 }
 
 // S4
-func parseMinNum(r *scan.Runner, a *Angle) (int, error) {
+func parseMinNum(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -169,7 +172,7 @@ func parseMinNum(r *scan.Runner, a *Angle) (int, error) {
 }
 
 // S5
-func parseSecNum(r *scan.Runner, a *Angle) (int, error) {
+func parseSecNum(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -200,21 +203,29 @@ func parseSecNum(r *scan.Runner, a *Angle) (int, error) {
 }
 
 // S6
-func parseHemi(r *scan.Runner, a *Angle) (int, error) {
+func parseHemi(r *scan.Runner, a *Parsed) (int, error) {
 	tok := r.This
+	var hemi string
 	switch tok.Type {
 	case NorthType:
-		a.Hemi = NorthType
+		hemi = NorthType
 		r.Scan()
 	case SouthType:
-		a.Hemi = SouthType
+		hemi = SouthType
 		r.Scan()
 	case EastType:
-		a.Hemi = EastType
+		hemi = EastType
 		r.Scan()
 	case WestType:
-		a.Hemi = WestType
+		hemi = WestType
 		r.Scan()
+	}
+
+	if hemi != "" && a.Hemi != "" {
+		return -1, NewError(tok, "only one of %v or %v are allowed", scan.Quote(a.Hemi), scan.Quote(hemi))
+	}
+	if hemi != "" {
+		a.Hemi = hemi
 	}
 	return -1, nil
 }

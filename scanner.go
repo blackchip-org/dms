@@ -15,14 +15,14 @@ const (
 )
 
 var (
-	Sign  = scan.NewClassRule(scan.Sign)
-	Deg   = scan.NewClassRule(scan.Rune('d', '°')).WithType(DegType)
-	Min   = scan.NewClassRule(scan.Rune('m', '\'', '′')).WithType(MinType)
-	Sec   = scan.NewClassRule(scan.Rune('s', '"', '″')).WithType(SecType)
-	East  = scan.NewClassRule(scan.Rune('E')).WithType(EastType)
-	North = scan.NewClassRule(scan.Rune('N')).WithType(NorthType)
-	South = scan.NewClassRule(scan.Rune('S')).WithType(SouthType)
-	West  = scan.NewClassRule(scan.Rune('W')).WithType(WestType)
+	SignRule  = scan.NewClassRule(scan.Sign)
+	DegRule   = scan.NewClassRule(scan.Rune('d', '°')).WithType(DegType)
+	MinRule   = scan.NewClassRule(scan.Rune('m', '\'', '′')).WithType(MinType)
+	SecRule   = scan.NewClassRule(scan.Rune('s', '"', '″')).WithType(SecType)
+	EastRule  = scan.NewClassRule(scan.Rune('E')).WithType(EastType)
+	NorthRule = scan.NewClassRule(scan.Rune('N')).WithType(NorthType)
+	SouthRule = scan.NewClassRule(scan.Rune('S')).WithType(SouthType)
+	WestRule  = scan.NewClassRule(scan.Rune('W')).WithType(WestType)
 )
 
 type Context struct {
@@ -34,9 +34,9 @@ func NewContext() *Context {
 	c.RuleSet = scan.NewRuleSet(
 		scan.NewSpaceRule(scan.Whitespace),
 		scan.Real,
-		Sign,
-		Deg, Min, Sec,
-		East, North, South, West,
+		SignRule,
+		DegRule, MinRule, SecRule,
+		EastRule, NorthRule, SouthRule, WestRule,
 	)
 	return c
 }

@@ -1,53 +1,61 @@
 package dms
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
-func TestFormatter(t *testing.T) {
-	def := NewFormatter(SecType, 1)
-	dms := def.WithSymbols("d", "m", "s")
-
-	dm := NewFormatter(MinType, 3)
-	dd := NewFormatter(DegType, 6)
-
-	sign := def.WithSign(true)
-	mash := def.WithSep("")
+func TestFormatLat(t *testing.T) {
+	var (
+		def  = NewFormatter(SecType, 1)
+		dms  = def.WithSymbols("d", "m", "")
+		dm   = NewFormatter(MinType, 3)
+		dd   = NewFormatter(DegType, 6)
+		ddn  = NewFormatter(DegType, -1)
+		sign = def.WithSign(true)
+		mash = def.WithSep("")
+	)
 
 	tests := []struct {
 		f      *Formatter
 		angle  Angle
 		result string
 	}{
-		{&def, Angle{Deg: "1"}, "1° 0′ 0.0″"},
-		{&def, Angle{Deg: "1", Min: "2"}, "1° 2′ 0.0″"},
-		{&def, Angle{Deg: "1", Min: "2", Sec: "3.39"}, "1° 2′ 3.4″"},
-		{&def, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "N"}, "1° 2′ 3.4″ N"},
-		{&def, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "S"}, "1° 2′ 3.4″ S"},
-		{&def, Angle{Deg: "-1", Min: "2", Sec: "3.39"}, "-1° 2′ 3.4″"},
-		{&def, Angle{Deg: "1.051667", Hemi: "S"}, "1° 3′ 6.0″ S"},
-		{&def, Angle{Deg: "12.582439", Hemi: "W"}, "12° 34′ 56.8″ W"},
-		{&def, Angle{Deg: "12", Min: "34.56", Hemi: "W"}, "12° 34′ 33.6″ W"},
+		{&def, NewAngle(1, 0, 0), "1° 0′ 0.0″ N"},
+		{&def, NewAngle(1, 2, 0), "1° 2′ 0.0″ N"},
+		{&def, NewAngle(1, 2, 3.33), "1° 2′ 3.3″ N"},
+		{&def, NewAngle(-1, 2, 3.33), "1° 2′ 3.3″ S"},
+		{&def, NewAngle(1, -2, -3.33), "1° 2′ 3.3″ N"},
+		{&def, NewAngle(-1, 2, 3.36), "1° 2′ 3.4″ S"},
+		{&def, NewAngle(1.051667, 0, 0), "1° 3′ 6.0″ N"},
+		{&def, NewAngle(-1.051667, 0, 0), "1° 3′ 6.0″ S"},
+		{&def, NewAngle(1.5, 0, 0), "1° 30′ 0.0″ N"},
+		{&def, NewAngle(1.5, 10, 0), "1° 40′ 0.0″ N"},
+		{&def, NewAngle(-1.5, 10, 0), "1° 40′ 0.0″ S"},
+		{&def, NewAngle(-1.5, -10, 0), "1° 40′ 0.0″ S"},
+		{&def, NewAngle(1.5, 10.5, 10), "1° 40′ 40.0″ N"},
+		{&def, NewAngle(0, 0, 75), "0° 1′ 15.0″ N"},
+		{&def, NewAngle(0, 10, 135), "0° 12′ 15.0″ N"},
+		{&def, NewAngle(0, 59, 135), "1° 1′ 15.0″ N"},
 
-		{&dms, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "S"}, "1d 2m 3.4s S"},
+		{&dms, NewAngle(11, 22, 33.39), "11d 22m 33.4 N"},
 
-		{&dm, Angle{Deg: "1"}, "1° 0.000′"},
-		{&dm, Angle{Deg: "1", Min: "2"}, "1° 2.000′"},
-		{&dm, Angle{Deg: "1", Min: "2", Sec: "6"}, "1° 2.100′"},
+		{&dm, NewAngle(1, 0, 0), "1° 0.000′ N"},
+		{&dm, NewAngle(1, 2, 0), "1° 2.000′ N"},
+		{&dm, NewAngle(1, 2, 6), "1° 2.100′ N"},
 
-		{&dd, Angle{Deg: "1"}, "1.000000°"},
-		{&dd, Angle{Deg: "1", Min: "3"}, "1.050000°"},
-		{&dd, Angle{Deg: "1", Min: "3", Sec: "6"}, "1.051667°"},
+		{&dd, NewAngle(1, 0, 0), "1.000000° N"},
+		{&dd, NewAngle(1, 3, 0), "1.050000° N"},
+		{&dd, NewAngle(1, 3, 9), "1.052500° N"},
 
-		{&sign, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "N"}, "1° 2′ 3.4″"},
-		{&sign, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "S"}, "-1° 2′ 3.4″"},
-		{&mash, Angle{Deg: "1", Min: "2", Sec: "3.39", Hemi: "S"}, "1°2′3.4″S"},
+		{&ddn, NewAngle(1, 0, 0), "1° N"},
+
+		{&sign, NewAngle(1, 2, 3.33), "1° 2′ 3.3″"},
+		{&sign, NewAngle(-1, 2, 3.33), "-1° 2′ 3.3″"},
+
+		{&mash, NewAngle(1, 2, 3.33), "1°2′3.3″N"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.result, func(t *testing.T) {
-			result := test.f.Format(test.angle)
+			result := test.f.FormatLat(test.angle)
 			if result != test.result {
 				t.Errorf("\n have: [%v] \n want: [%v]\n", result, test.result)
 			}
@@ -55,109 +63,22 @@ func TestFormatter(t *testing.T) {
 	}
 }
 
-func TestFormatterPanic(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		msg   string
-	}{
-		{Angle{Deg: "12.34", Min: "56.78", Hemi: "W"}, "decimal degrees 12.34 with minutes 56.78"},
-		{Angle{Deg: "12", Min: "56.78", Sec: "99.99", Hemi: "W"}, "decimal minutes 56.78 with seconds 99.99"},
-		{Angle{Deg: "x"}, "invalid degrees: x"},
-		{Angle{Sign: "x", Deg: "1"}, "invalid sign: x"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.msg, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					msg := fmt.Sprintf("%v", r)
-					if msg != test.msg {
-						t.Errorf("\n have: %v \n want: %v", msg, test.msg)
-					}
-				}
-			}()
-			NewFormatter(SecType, 1).Format(test.angle)
-			t.Error("did not panic")
-		})
-	}
-}
-
-func ExampleFormatter_Format() {
-	f := NewFormatter(SecType, 1)
-	fmt.Println(f.Format(Angle{Deg: "1.051667", Hemi: "S"}))
-
-	// Output:
-	// 1° 3′ 6.0″ S
-}
-
-func TestFormatLat(t *testing.T) {
-	fsec := NewFormatter(SecType, 1)
-	fdeg := NewFormatter(DegType, 6)
-
-	tests := []struct {
-		f   *Formatter
-		deg float64
-		min float64
-		sec float64
-		str string
-	}{
-		{&fsec, 1, 0, 0, "1° 0′ 0.0″ N"},
-		{&fsec, 1.5, 0, 0, "1° 30′ 0.0″ N"},
-		{&fsec, 1, 2, 0, "1° 2′ 0.0″ N"},
-		{&fsec, 1, 2, 3, "1° 2′ 3.0″ N"},
-		{&fsec, -1, 0, 0, "1° 0′ 0.0″ S"},
-		{&fsec, -1, 2, 0, "1° 2′ 0.0″ S"},
-		{&fsec, -1, 2, 3, "1° 2′ 3.0″ S"},
-
-		{&fdeg, 1, 0, 0, "1.000000° N"},
-		{&fdeg, 1, 3, 0, "1.050000° N"},
-		{&fdeg, 1, 3, 6, "1.051667° N"},
-		{&fdeg, -1, 0, 0, "1.000000° S"},
-		{&fdeg, -1, 3, 0, "1.050000° S"},
-		{&fdeg, -1, -3, -6, "1.051667° S"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.str, func(t *testing.T) {
-			str := test.f.FormatLat(test.deg, test.min, test.sec)
-			if str != test.str {
-				t.Errorf("\n have: %v \n want: %v", str, test.str)
-			}
-		})
-	}
-}
-
 func TestFormatLon(t *testing.T) {
-	fsec := NewFormatter(SecType, 1)
-	fdeg := NewFormatter(DegType, 6)
-
+	def := NewFormatter(SecType, 1)
 	tests := []struct {
-		f   *Formatter
-		deg float64
-		min float64
-		sec float64
-		str string
+		f      *Formatter
+		angle  Angle
+		result string
 	}{
-		{&fsec, 1, 0, 0, "1° 0′ 0.0″ E"},
-		{&fsec, 1, 2, 0, "1° 2′ 0.0″ E"},
-		{&fsec, 1, 2, 3, "1° 2′ 3.0″ E"},
-		{&fsec, -1, 0, 0, "1° 0′ 0.0″ W"},
-		{&fsec, -1, 2, 0, "1° 2′ 0.0″ W"},
-		{&fsec, -1, 2, 3, "1° 2′ 3.0″ W"},
-
-		{&fdeg, 1, 0, 0, "1.000000° E"},
-		{&fdeg, 1, 3, 0, "1.050000° E"},
-		{&fdeg, 1, 3, 6, "1.051667° E"},
-		{&fdeg, -1, 0, 0, "1.000000° W"},
-		{&fdeg, -1, 3, 0, "1.050000° W"},
-		{&fdeg, -1, -3, -6, "1.051667° W"},
+		{&def, NewAngle(1, 0, 0), "1° 0′ 0.0″ E"},
+		{&def, NewAngle(-1, 2, 0), "1° 2′ 0.0″ W"},
 	}
 
 	for _, test := range tests {
-		t.Run(test.str, func(t *testing.T) {
-			str := test.f.FormatLon(test.deg, test.min, test.sec)
-			if str != test.str {
-				t.Errorf("\n have: %v \n want: %v", str, test.str)
+		t.Run(test.result, func(t *testing.T) {
+			result := test.f.FormatLon(test.angle)
+			if result != test.result {
+				t.Errorf("\n have: [%v] \n want: [%v]\n", result, test.result)
 			}
 		})
 	}

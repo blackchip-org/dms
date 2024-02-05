@@ -11,53 +11,53 @@ var bigReal = "1" + strings.Repeat("0", 309) + ".1"
 func TestParser(t *testing.T) {
 	tests := []struct {
 		input string
-		angle Angle
+		angle Parsed
 		err   string
 	}{
-		{`1`, Angle{Deg: "1"}, ""},
-		{`+1`, Angle{Sign: "+", Deg: "1"}, ""},
-		{`-1`, Angle{Sign: "-", Deg: "1"}, ""},
-		{`1°`, Angle{Deg: "1"}, ""},
-		{`1d`, Angle{Deg: "1"}, ""},
-		{`1°N`, Angle{Deg: "1", Hemi: "N"}, ""},
-		{`1°S`, Angle{Deg: "1", Hemi: "S"}, ""},
-		{`1°E`, Angle{Deg: "1", Hemi: "E"}, ""},
-		{`1°W`, Angle{Deg: "1", Hemi: "W"}, ""},
-		{`1°2'`, Angle{Deg: "1", Min: "2"}, ""},
-		{`1°2′`, Angle{Deg: "1", Min: "2"}, ""},
-		{`1d2m`, Angle{Deg: "1", Min: "2"}, ""},
-		{`1°2'S`, Angle{Deg: "1", Min: "2", Hemi: "S"}, ""},
-		{`1°2'3"`, Angle{Deg: "1", Min: "2", Sec: "3"}, ""},
-		{`1°2′3″`, Angle{Deg: "1", Min: "2", Sec: "3"}, ""},
-		{`1°2′3″S`, Angle{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
-		{`1° 2′ 3″ S`, Angle{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
-		{`1.2`, Angle{Deg: "1.2"}, ""},
-		{`1.2°`, Angle{Deg: "1.2"}, ""},
-		{`1.2°S`, Angle{Deg: "1.2", Hemi: "S"}, ""},
-		{`1°2.3'`, Angle{Deg: "1", Min: "2.3"}, ""},
-		{`1°2.3'S`, Angle{Deg: "1", Min: "2.3", Hemi: "S"}, ""},
-		{`1°2'3.4"`, Angle{Deg: "1", Min: "2", Sec: "3.4"}, ""},
-		{`1°2'3.4"S`, Angle{Deg: "1", Min: "2", Sec: "3.4", Hemi: "S"}, ""},
-		{`9223372036854775807`, Angle{Deg: "9223372036854775807"}, ""},
+		{`1`, Parsed{Deg: "1"}, ""},
+		{`+1`, Parsed{Hemi: "+", Deg: "1"}, ""},
+		{`-1`, Parsed{Hemi: "-", Deg: "1"}, ""},
+		{`1°`, Parsed{Deg: "1"}, ""},
+		{`1d`, Parsed{Deg: "1"}, ""},
+		{`1°N`, Parsed{Deg: "1", Hemi: "N"}, ""},
+		{`1°S`, Parsed{Deg: "1", Hemi: "S"}, ""},
+		{`1°E`, Parsed{Deg: "1", Hemi: "E"}, ""},
+		{`1°W`, Parsed{Deg: "1", Hemi: "W"}, ""},
+		{`1°2'`, Parsed{Deg: "1", Min: "2"}, ""},
+		{`1°2′`, Parsed{Deg: "1", Min: "2"}, ""},
+		{`1d2m`, Parsed{Deg: "1", Min: "2"}, ""},
+		{`1°2'S`, Parsed{Deg: "1", Min: "2", Hemi: "S"}, ""},
+		{`1°2'3"`, Parsed{Deg: "1", Min: "2", Sec: "3"}, ""},
+		{`1°2′3″`, Parsed{Deg: "1", Min: "2", Sec: "3"}, ""},
+		{`1°2′3″S`, Parsed{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
+		{`1° 2′ 3″ S`, Parsed{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
+		{`1.2`, Parsed{Deg: "1.2"}, ""},
+		{`1.2°`, Parsed{Deg: "1.2"}, ""},
+		{`1.2°S`, Parsed{Deg: "1.2", Hemi: "S"}, ""},
+		{`1°2.3'`, Parsed{Deg: "1", Min: "2.3"}, ""},
+		{`1°2.3'S`, Parsed{Deg: "1", Min: "2.3", Hemi: "S"}, ""},
+		{`1°2'3.4"`, Parsed{Deg: "1", Min: "2", Sec: "3.4"}, ""},
+		{`1°2'3.4"S`, Parsed{Deg: "1", Min: "2", Sec: "3.4", Hemi: "S"}, ""},
+		{`9223372036854775807`, Parsed{Deg: "9223372036854775807"}, ""},
 
-		{`x`, Angle{}, `1:1: expected degree, got "x"`},
-		{`+`, Angle{}, `1:2: expected degree, got ""`},
-		{`1x`, Angle{}, `1:2: unexpected "x"`},
-		{`1°x`, Angle{}, `1:3: unexpected "x"`},
-		{`1°2`, Angle{}, `1:4: expected minute symbol, got ""`},
-		{`1°2'3`, Angle{}, `1:6: expected second symbol, got ""`},
-		{`1.1x`, Angle{}, `1:4: unexpected "x"`},
-		{`1°2.2`, Angle{}, `1:6: expected minute symbol, got ""`},
-		{`1.1°2.2`, Angle{}, `1:5: unexpected "2.2"`},
-		{`1°2.2'3.3`, Angle{}, `1:7: unexpected "3.3"`},
-		{`9223372036854775808`, Angle{}, `1:1: invalid degree "9223372036854775808"`},
-		{bigReal, Angle{}, `1:1: invalid degree "` + bigReal + `"`},
-		{`1°60"`, Angle{}, `1:3: invalid minute "60"`},
-		{`1°59'60"`, Angle{}, `1:6: invalid second "60"`},
-		{`1°60.1"`, Angle{}, `1:3: invalid minute "60.1"`},
-		{`1°59'60.1"`, Angle{}, `1:6: invalid second "60.1"`},
-		{`-1°2'3.4"N`, Angle{}, `1:1: only one of "-" or "N" allowed`},
-		{`+1°2'3.4"S`, Angle{}, `1:1: only one of "+" or "S" allowed`},
+		{`x`, Parsed{}, `1:1: expected degree, got "x"`},
+		{`+`, Parsed{}, `1:2: expected degree, got ""`},
+		{`1x`, Parsed{}, `1:2: unexpected "x"`},
+		{`1°x`, Parsed{}, `1:3: unexpected "x"`},
+		{`1°2`, Parsed{}, `1:4: expected minute symbol, got ""`},
+		{`1°2'3`, Parsed{}, `1:6: expected second symbol, got ""`},
+		{`1.1x`, Parsed{}, `1:4: unexpected "x"`},
+		{`1°2.2`, Parsed{}, `1:6: expected minute symbol, got ""`},
+		{`1.1°2.2`, Parsed{}, `1:5: unexpected "2.2"`},
+		{`1°2.2'3.3`, Parsed{}, `1:7: unexpected "3.3"`},
+		{`9223372036854775808`, Parsed{}, `1:1: invalid degree "9223372036854775808"`},
+		{bigReal, Parsed{}, `1:1: invalid degree "` + bigReal + `"`},
+		{`1°60"`, Parsed{}, `1:3: invalid minute "60"`},
+		{`1°59'60"`, Parsed{}, `1:6: invalid second "60"`},
+		{`1°60.1"`, Parsed{}, `1:3: invalid minute "60.1"`},
+		{`1°59'60.1"`, Parsed{}, `1:6: invalid second "60.1"`},
+		{`-1°2'3.4"N`, Parsed{}, `1:10: only one of "-" or "N" are allowed`},
+		{`+1°2'3.4"S`, Parsed{}, `1:10: only one of "+" or "S" are allowed`},
 	}
 
 	for _, test := range tests {
@@ -80,7 +80,7 @@ func TestParser(t *testing.T) {
 
 func ExampleParser_Parse() {
 	p := NewDefaultParser()
-	a, err := p.Parse("1° 3′ 6″ S")
+	a, err := p.ParseAngle("1° 3′ 6″ S")
 	if err != nil {
 		panic(err)
 	}

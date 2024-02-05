@@ -1,170 +1,24 @@
 package dms
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
-func TestAngleToDegrees(t *testing.T) {
+func TestAngleAdd(t *testing.T) {
 	tests := []struct {
-		angle Angle
-		deg   string
+		a   Angle
+		b   Angle
+		str string
 	}{
-		{Angle{Deg: "1"}, "1.000000"},
-		{Angle{Deg: "1", Min: "3"}, "1.050000"},
-		{Angle{Deg: "1", Min: "3", Sec: "6"}, "1.051667"},
-		{Angle{Min: "3"}, "0.050000"},
-		{Angle{Min: "3", Sec: "6"}, "0.051667"},
-		{Angle{Sec: "6"}, "0.001667"},
-		{Angle{Min: "3", Sec: "6", Hemi: "S"}, "-0.051667"},
-		{Angle{Sign: "-", Min: "3", Sec: "6"}, "-0.051667"},
+		{NewAngle(1, 2, 3), NewAngle(4, 5, 6), "5° 7′ 9.0″ N"},
+		{NewAngle(-1, 0, 0), NewAngle(1, 0, 0), "0° 0′ 0.0″ N"},
+		{NewAngle(-1, 15, 0), NewAngle(1, 15, 0), "0° 0′ 0.0″ N"},
 	}
 
+	f := NewFormatter(SecType, 1)
 	for _, test := range tests {
-		t.Run(test.deg, func(t *testing.T) {
-			deg := fmt.Sprintf("%.6f", test.angle.ToDegrees())
-			if deg != test.deg {
-				t.Errorf("\n have: %v \n want: %v", deg, test.deg)
-			}
-		})
-	}
-}
-
-func TestAngleToMinutes(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		min   string
-	}{
-		{Angle{Deg: "1"}, "60.000"},
-		{Angle{Deg: "1", Min: "3"}, "63.000"},
-		{Angle{Deg: "1", Min: "3", Sec: "6"}, "63.100"},
-		{Angle{Min: "3"}, "3.000"},
-		{Angle{Min: "3", Sec: "6"}, "3.100"},
-		{Angle{Sec: "6"}, "0.100"},
-		{Angle{Min: "3", Sec: "6", Hemi: "S"}, "-3.100"},
-		{Angle{Sign: "-", Min: "3", Sec: "6"}, "-3.100"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.min, func(t *testing.T) {
-			min := fmt.Sprintf("%.3f", test.angle.ToMinutes())
-			if min != test.min {
-				t.Errorf("\n have: %v \n want: %v", min, test.min)
-			}
-		})
-	}
-}
-
-func TestAngleToSeconds(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		sec   string
-	}{
-		{Angle{Deg: "1"}, "3600.0"},
-		{Angle{Deg: "1", Min: "3"}, "3780.0"},
-		{Angle{Deg: "1", Min: "3", Sec: "6"}, "3786.0"},
-		{Angle{Min: "3"}, "180.0"},
-		{Angle{Min: "3", Sec: "6"}, "186.0"},
-		{Angle{Sec: "6"}, "6.0"},
-		{Angle{Min: "3", Sec: "6", Hemi: "S"}, "-186.0"},
-		{Angle{Sign: "-", Min: "3", Sec: "6"}, "-186.0"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.sec, func(t *testing.T) {
-			sec := fmt.Sprintf("%.1f", test.angle.ToSeconds())
-			if sec != test.sec {
-				t.Errorf("\n have: %v \n want: %v", sec, test.sec)
-			}
-		})
-	}
-}
-
-func TestAngleToRadians(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		rad   string
-	}{
-		{Angle{Deg: "90"}, "1.570796"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.rad, func(t *testing.T) {
-			rad := fmt.Sprintf("%.6f", test.angle.ToRadians())
-			if rad != test.rad {
-				t.Errorf("\n have: %v \n want: %v", rad, test.rad)
-			}
-		})
-	}
-}
-
-func TestAngleToFloatsErrors(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		err   string
-	}{
-		{Angle{Deg: "x"}, "invalid degrees: x"},
-		{Angle{Sign: "+", Deg: "-1"}, "sign is positive but degrees are negative: -1"},
-		{Angle{Min: "x"}, "invalid minutes: x"},
-		{Angle{Min: "60"}, "invalid minutes: 60"},
-		{Angle{Sec: "x"}, "invalid seconds: x"},
-		{Angle{Sec: "60"}, "invalid seconds: 60"},
-		{Angle{Hemi: "x"}, "invalid hemisphere: x"},
-		{Angle{Sign: "-", Hemi: "N"}, "only one of '-' and 'N' allowed"},
-		{Angle{Sign: "+", Hemi: "S"}, "only one of '+' and 'S' allowed"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.err, func(t *testing.T) {
-			_, _, _, _, err := test.angle.ToFloats()
-			if err == nil {
-				t.Fatal("expected error")
-			}
-			if err.Error() != test.err {
-				t.Errorf("\n have: %v \n want: %v", err.Error(), test.err)
-			}
-		})
-	}
-}
-
-func TestAsLat(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		lat   Angle
-	}{
-		{Angle{Deg: "1", Hemi: "X"}, Angle{Deg: "1", Hemi: "X"}},
-		{Angle{Deg: "1"}, Angle{Deg: "1", Hemi: "N"}},
-		{Angle{Sign: "+", Deg: "1"}, Angle{Deg: "1", Hemi: "N"}},
-		{Angle{Sign: "-", Deg: "1"}, Angle{Deg: "1", Hemi: "S"}},
-	}
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("%+v", test.angle), func(t *testing.T) {
-			lat := test.angle.AsLat()
-			if lat != test.lat {
-				t.Fatalf("\n have: %v \n want: %v", lat, test.lat)
-			}
-		})
-	}
-}
-
-func TestAsLon(t *testing.T) {
-	tests := []struct {
-		angle Angle
-		lat   Angle
-	}{
-		{Angle{Deg: "1", Hemi: "X"}, Angle{Deg: "1", Hemi: "X"}},
-		{Angle{Deg: "1"}, Angle{Deg: "1", Hemi: "E"}},
-		{Angle{Sign: "+", Deg: "1"}, Angle{Deg: "1", Hemi: "E"}},
-		{Angle{Sign: "-", Deg: "1"}, Angle{Deg: "1", Hemi: "W"}},
-	}
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("%+v", test.angle), func(t *testing.T) {
-			lat := test.angle.AsLon()
-			if lat != test.lat {
-				t.Fatalf("\n have: %v \n want: %v", lat, test.lat)
-			}
-		})
+		c := test.a.Add(test.b)
+		str := f.FormatLat(c)
+		if str != test.str {
+			t.Errorf("\n have: %v \n want: %v", str, test.str)
+		}
 	}
 }
