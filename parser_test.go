@@ -1,6 +1,7 @@
 package dms
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -77,4 +78,16 @@ func TestParser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleParser_Parse() {
+	p := NewDefaultParser()
+	a, err := p.Parse("1° 3′ 6″ S")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%.6f", a.ToDegrees())
+
+	// Output:
+	// -1.051667
 }

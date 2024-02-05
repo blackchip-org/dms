@@ -25,17 +25,28 @@ func NewFormatter(to string, places int) Formatter {
 		Min:    "′",
 		Sec:    "″",
 		Sign:   false,
-		North:  "N",
-		South:  "S",
-		East:   "E",
-		West:   "W",
 		Sep:    " ",
 		Places: places,
 		To:     to,
 	}
 }
 
-func (f *Formatter) Format(a Angle) string {
+func (f Formatter) WithSymbols(deg string, min string, sec string) Formatter {
+	f.Deg, f.Min, f.Sec = deg, min, sec
+	return f
+}
+
+func (f Formatter) WithSign(s bool) Formatter {
+	f.Sign = s
+	return f
+}
+
+func (f Formatter) WithSep(sep string) Formatter {
+	f.Sep = sep
+	return f
+}
+
+func (f Formatter) Format(a Angle) string {
 	sign, deg, min, sec, err := a.ToFloats()
 	if err != nil {
 		panic(err)

@@ -22,6 +22,7 @@ func (a Angle) AsLat() (Angle, error) {
 	if a.Sign < 0 {
 		a.Hemi = SouthType
 	} else if a.Sign >= 0 {
+		a.Sign = 1
 		a.Hemi = NorthType
 	}
 	return a, nil
@@ -34,6 +35,7 @@ func (a Angle) AsLon() (Angle, error) {
 	if a.Sign < 0 {
 		a.Hemi = WestType
 	} else if a.Sign >= 0 {
+		a.Sign = 1
 		a.Hemi = EastType
 	}
 	return a, nil
@@ -43,6 +45,7 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 	if a.Deg != "" {
 		deg, err = strconv.ParseFloat(a.Deg, 64)
 		if err != nil {
+			err = fmt.Errorf("invalid degrees: %v", a.Deg)
 			return
 		}
 		if a.Sign == 1 && deg < 0 {
@@ -57,10 +60,11 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 	if a.Min != "" {
 		min, err = strconv.ParseFloat(a.Min, 64)
 		if err != nil {
+			err = fmt.Errorf("invalid minutes: %v", a.Min)
 			return
 		}
 		if min < 0 || min >= 60 {
-			err = fmt.Errorf("invalid minutes: %v", min)
+			err = fmt.Errorf("invalid minutes: %v", a.Min)
 			return
 		}
 	}
@@ -68,11 +72,12 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 	if a.Sec != "" {
 		sec, err = strconv.ParseFloat(a.Sec, 64)
 		if err != nil {
+			err = fmt.Errorf("invalid seconds: %v", a.Sec)
 			return
 		}
 		sec = math.Abs(sec)
 		if sec < 0 || sec >= 60 {
-			err = fmt.Errorf("invalid seconds: %v", sec)
+			err = fmt.Errorf("invalid seconds: %v", a.Sec)
 		}
 	}
 
@@ -83,10 +88,10 @@ func (a Angle) ToFloats() (sign float64, deg float64, min float64, sec float64, 
 			return
 		}
 		if a.Sign == -1 && a.Hemi != SouthType && a.Hemi != WestType {
-			err = fmt.Errorf("hemisphere mismatch: '+' and '%v", a.Hemi)
+			err = fmt.Errorf("hemisphere mismatch: '-' and '%v'", a.Hemi)
 		}
 		if a.Sign == 1 && a.Hemi != NorthType && a.Hemi != EastType {
-			err = fmt.Errorf("hemisphere mismatch: '-' and '%v'", a.Hemi)
+			err = fmt.Errorf("hemisphere mismatch: '+' and '%v'", a.Hemi)
 		}
 	}
 	if sign == 0 {

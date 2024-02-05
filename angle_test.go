@@ -119,5 +119,95 @@ func TestAngleToRadians(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestAngleToFloatsErrors(t *testing.T) {
+	tests := []struct {
+		angle Angle
+		err   string
+	}{
+		{Angle{Deg: "x"}, "invalid degrees: x"},
+		{Angle{Sign: 1, Deg: "-1"}, "sign is positive but degrees are negative: -1"},
+		{Angle{Min: "x"}, "invalid minutes: x"},
+		{Angle{Min: "60"}, "invalid minutes: 60"},
+		{Angle{Sec: "x"}, "invalid seconds: x"},
+		{Angle{Sec: "60"}, "invalid seconds: 60"},
+		{Angle{Hemi: "x"}, "invalid hemisphere: x"},
+		{Angle{Sign: -1, Hemi: "N"}, "hemisphere mismatch: '-' and 'N'"},
+		{Angle{Sign: 1, Hemi: "S"}, "hemisphere mismatch: '+' and 'S'"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.err, func(t *testing.T) {
+			_, _, _, _, err := test.angle.ToFloats()
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if err.Error() != test.err {
+				t.Errorf("\n have: %v \n want: %v", err.Error(), test.err)
+			}
+		})
+	}
+}
+
+func TestAsLat(t *testing.T) {
+	tests := []struct {
+		angle Angle
+		lat   Angle
+		err   string
+	}{
+		{Angle{Deg: "1", Hemi: "W"}, Angle{}, "invalid hemisphere: W"},
+		{Angle{Deg: "1", Hemi: "E"}, Angle{}, "invalid hemisphere: E"},
+		{Angle{Deg: "1", Hemi: "X"}, Angle{}, "invalid hemisphere: X"},
+		{Angle{Deg: "1"}, Angle{Sign: 1, Deg: "1", Hemi: "N"}, ""},
+		{Angle{Sign: 1, Deg: "1"}, Angle{Sign: 1, Deg: "1", Hemi: "N"}, ""},
+		{Angle{Sign: -1, Deg: "1"}, Angle{Sign: -1, Deg: "1", Hemi: "S"}, ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.angle.String(), func(t *testing.T) {
+			lat, err := test.angle.AsLat()
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
+			if errMsg != test.err {
+				t.Fatalf("\n have err: %v \n want err: %v", errMsg, test.err)
+			}
+			if lat != test.lat {
+				t.Fatalf("\n have: %v \n want: %v", lat, test.lat)
+			}
+		})
+	}
+}
+
+func TestAsLon(t *testing.T) {
+	tests := []struct {
+		angle Angle
+		lat   Angle
+		err   string
+	}{
+		{Angle{Deg: "1", Hemi: "N"}, Angle{}, "invalid hemisphere: N"},
+		{Angle{Deg: "1", Hemi: "S"}, Angle{}, "invalid hemisphere: S"},
+		{Angle{Deg: "1", Hemi: "X"}, Angle{}, "invalid hemisphere: X"},
+		{Angle{Deg: "1"}, Angle{Sign: 1, Deg: "1", Hemi: "E"}, ""},
+		{Angle{Sign: 1, Deg: "1"}, Angle{Sign: 1, Deg: "1", Hemi: "E"}, ""},
+		{Angle{Sign: -1, Deg: "1"}, Angle{Sign: -1, Deg: "1", Hemi: "W"}, ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.angle.String(), func(t *testing.T) {
+			lat, err := test.angle.AsLon()
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
+			if errMsg != test.err {
+				t.Fatalf("\n have err: %v \n want err: %v", errMsg, test.err)
+			}
+			if lat != test.lat {
+				t.Fatalf("\n have: %v \n want: %v", lat, test.lat)
+			}
+		})
+	}
 }
