@@ -1,10 +1,15 @@
 package dms
 
 import (
-	"fmt"
 	"math"
-	"strconv"
 )
+
+type Fields struct {
+	Deg  string
+	Min  string
+	Sec  string
+	Hemi string
+}
 
 type Angle struct {
 	deg float64
@@ -37,30 +42,6 @@ func NewAngle(deg float64, min float64, sec float64) Angle {
 	})
 }
 
-func NewAngleFromParsed(p Parsed) Angle {
-	deg, err := strconv.ParseFloat(p.Deg, 64)
-	if err != nil {
-		panic(err)
-	}
-	min, err := strconv.ParseFloat(p.Min, 64)
-	if err != nil {
-		panic(err)
-	}
-	sec, err := strconv.ParseFloat(p.Sec, 64)
-	if err != nil {
-		panic(err)
-	}
-	switch p.Hemi {
-	case NorthType, EastType, "+":
-		// good
-	case SouthType, WestType, "-":
-		deg = deg * -1
-	default:
-		panic(fmt.Sprintf("invalid hemisphere: %v", p.Hemi))
-	}
-	return NewAngle(deg, min, sec)
-}
-
 func (a Angle) Add(a2 Angle) Angle {
 	var carry float64
 
@@ -72,19 +53,19 @@ func (a Angle) Add(a2 Angle) Angle {
 	return a
 }
 
-func (a Angle) ToDegrees() float64 {
+func (a Angle) Degrees() float64 {
 	return a.deg + (a.min / 60) + (a.sec / 3600)
 }
 
-func (a Angle) ToMinutes() float64 {
-	return (a.deg * 60) + a.min + (a.sec / 3600)
+func (a Angle) Minutes() float64 {
+	return (a.deg * 60) + a.min + (a.sec / 60)
 }
 
-func (a Angle) ToSeconds() float64 {
+func (a Angle) Seconds() float64 {
 	return (a.deg * 3600) + (a.min * 60) + a.sec
 }
 
-func (a Angle) ToDMS() (deg, min, sec float64) {
-	deg, min, sec = a.deg, a.min, a.sec
+func (a Angle) DMS() (deg, min, sec float64) {
+	deg, min, sec = a.deg, math.Abs(a.min), math.Abs(a.sec)
 	return
 }

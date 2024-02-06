@@ -43,6 +43,10 @@ func (f Formatter) WithSep(sep string) Formatter {
 	return f
 }
 
+func (f Formatter) Format(lat Angle, lon Angle) (string, string) {
+	return f.format(lat, true), f.format(lon, false)
+}
+
 func (f Formatter) FormatLat(a Angle) string {
 	return f.format(a, true)
 }
@@ -52,7 +56,7 @@ func (f Formatter) FormatLon(a Angle) string {
 }
 
 func (f Formatter) format(a Angle, lat bool) string {
-	deg, min, sec := a.ToDMS()
+	deg, min, sec := a.DMS()
 	sign := 1
 	if deg < 0 {
 		sign = -1

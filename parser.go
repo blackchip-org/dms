@@ -20,7 +20,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%v: %v", e.Pos, e.Message)
 }
 
-var stateMachine = []func(*scan.Runner, *Parsed) (int, error){
+var stateMachine = []func(*scan.Runner, *Fields) (int, error){
 	parseSign,       // S0
 	parseDegNum,     // S1
 	parseDegIntSym,  // S2
@@ -43,8 +43,8 @@ func NewDefaultParser() *Parser {
 	return NewParser(NewContext())
 }
 
-func (p *Parser) Parse(v string) (Parsed, error) {
-	var a Parsed
+func (p *Parser) ParseFields(v string) (Fields, error) {
+	var a Fields
 	p.scanner.InitFromString("", v)
 	r := scan.NewRunner(&p.scanner, p.ctx.RuleSet)
 
@@ -54,7 +54,7 @@ func (p *Parser) Parse(v string) (Parsed, error) {
 		parse := stateMachine[state]
 		state, err = parse(r, &a)
 		if err != nil {
-			return Parsed{}, err
+			return Fields{}, err
 		}
 		if state == -1 {
 			break
@@ -63,22 +63,42 @@ func (p *Parser) Parse(v string) (Parsed, error) {
 
 	tok := r.This
 	if !tok.IsEndOfText() {
-		return Parsed{}, NewError(tok, "unexpected %v", scan.Quote(tok.Lit))
+		return Fields{}, NewError(tok, "unexpected %v", scan.Quote(tok.Lit))
 	}
 
 	return a, nil
 }
 
-func (p *Parser) ParseAngle(v string) (Angle, error) {
-	parsed, err := p.Parse(v)
+func (p *Parser) Parse(v string) (Angle, error) {
+	parsed, err := p.ParseFields(v)
 	if err != nil {
 		return Angle{}, err
 	}
-	return NewAngleFromParsed(parsed), nil
+	deg, err := strconv.ParseFloat(parsed.Deg, 64)
+	if err != nil {
+		return Angle{}, fmt.Errorf("invalid degrees: %v", parsed.Deg)
+	}
+	min, err := strconv.ParseFloat(parsed.Min, 64)
+	if err != nil {
+		return Angle{}, fmt.Errorf("invalid minutes: %v", parsed.Min)
+	}
+	sec, err := strconv.ParseFloat(parsed.Sec, 64)
+	if err != nil {
+		return Angle{}, fmt.Errorf("invalid seconds: %v", parsed.Sec)
+	}
+	switch parsed.Hemi {
+	case NorthType, EastType, "+":
+		// good
+	case SouthType, WestType, "-":
+		deg = deg * -1
+	default:
+		return Angle{}, fmt.Errorf("invalid hemisphere: %v", parsed.Hemi)
+	}
+	return NewAngle(deg, min, sec), nil
 }
 
 // S0
-func parseSign(r *scan.Runner, a *Parsed) (int, error) {
+func parseSign(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case "+":
@@ -92,7 +112,7 @@ func parseSign(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S1
-func parseDegNum(r *scan.Runner, a *Parsed) (int, error) {
+func parseDegNum(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -116,7 +136,7 @@ func parseDegNum(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S2
-func parseDegIntSym(r *scan.Runner, a *Parsed) (int, error) {
+func parseDegIntSym(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
@@ -127,7 +147,7 @@ func parseDegIntSym(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S3
-func parseRealIntSym(r *scan.Runner, a *Parsed) (int, error) {
+func parseRealIntSym(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
@@ -138,7 +158,7 @@ func parseRealIntSym(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S4
-func parseMinNum(r *scan.Runner, a *Parsed) (int, error) {
+func parseMinNum(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -172,7 +192,7 @@ func parseMinNum(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S5
-func parseSecNum(r *scan.Runner, a *Parsed) (int, error) {
+func parseSecNum(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case IntType:
@@ -203,7 +223,7 @@ func parseSecNum(r *scan.Runner, a *Parsed) (int, error) {
 }
 
 // S6
-func parseHemi(r *scan.Runner, a *Parsed) (int, error) {
+func parseHemi(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	var hemi string
 	switch tok.Type {

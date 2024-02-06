@@ -8,11 +8,11 @@ An example of parsing an angle:
 
 ```go
 	p := dms.NewDefaultParser()
-	a, err := p.Parse("1° 3′ 6″ S")
+	a, err := p.Parse(`1° 3' 6" S`)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%.6f", a.ToDegrees())
+	fmt.Printf("%.6f", a.Degrees())
 
 	// Output:
 	// -1.051667
@@ -33,66 +33,23 @@ contains the fields that were extracted. The parser uses the following rules:
 - Degrees must be an integer when minutes are provided and minutes must be an integer when seconds are provided
 - Either a numeric sign (`+` or `-`) or a hemisphere designator may appear, but not both
 
-If fields have already been extracted, the `NewAngle()` function can be used
-instead:
-
-```go
-	a := dms.NewAngle("", "1", "3", "6", "S")
-	fmt.Printf("%.6f", a.ToDegrees())
-
-	// Output:
-	// -1.051667
-```
-
 ### Formatting
 
-A formater is creating with two parameters, the last unit to show (either
+A formatter is creating with two parameters, the last unit to show (either
 `DegType`, `MinType`, or `SecType`), and the number of places for that last
 unit. For example, to create a degrees and minutes formatter to 3 digits:
 
 ```go
 	p := dms.NewDefaultParser()
-	a, err := p.Parse("1° 3′ 6″ S")
+	a, err := p.Parse(`1° 3' 6" S`)
 	if err != nil {
 		panic(err)
 	}
 	f := dms.NewFormatter(dms.MinType, 3)
-	fmt.Println(f.Format(a))
+	fmt.Println(f.FormatLat(a))
 
 	// Output:
 	// 1° 3.100′ S
-```
-
-For signed values, the `AsLat()` and `AsLon()` methods can be used to provide
-additional context:
-
-```go
-	p := dms.NewDefaultParser()
-	a, err := p.Parse("-1° 3′ 6″")
-	if err != nil {
-		panic(err)
-	}
-	f := dms.NewFormatter(dms.MinType, 3)
-	fmt.Println(f.Format(a.AsLat()))
-	fmt.Println(f.Format(a.AsLon()))
-
-	// Output:
-	// 1° 3.100′ S
-	// 1° 3.100′ W
-```
-
-Float values can formatted with `FormatLat` and `FormatLon`. The degrees
-value should contain the sign of the overall value. Signs are ignored on
-minutes and degree values:
-
-```go
-	f := dms.NewFormatter(dms.MinType, 3)
-	fmt.Println(f.FormatLat(-1.5, 0, 0))
-	fmt.Println(f.FormatLon(-1, 30, 30))
-
-	// Output:
-	// 1° 30.000′ S
-	// 1° 30.500′ W
 ```
 
 ## Status
