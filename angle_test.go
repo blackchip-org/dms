@@ -2,6 +2,7 @@ package dms
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -96,5 +97,33 @@ func TestAngleAdd(t *testing.T) {
 			t.Errorf("\n have: %v \n want: %v", str, test.str)
 		}
 	}
+}
 
+func TestAngleSub(t *testing.T) {
+	tests := []struct {
+		a   Angle
+		b   Angle
+		str string
+	}{
+		{NewAngle(4, 5, 6), NewAngle(1, 2, 3), "3° 3′ 3.0″ N"},
+		{NewAngle(-1, 0, 0), NewAngle(1, 0, 0), "2° 0′ 0.0″ S"},
+		{NewAngle(-1, 15, 0), NewAngle(1, 15, 0), "2° 30′ 0.0″ S"},
+	}
+
+	f := NewFormatter(SecType, 1)
+	for _, test := range tests {
+		c := test.a.Sub(test.b)
+		str := f.FormatLat(c)
+		if str != test.str {
+			t.Errorf("\n have: %v \n want: %v", str, test.str)
+		}
+	}
+}
+
+func TestAngleRadians(t *testing.T) {
+	have := fmt.Sprintf("%.8f", NewAngle(90, 0, 0).Radians())
+	want := fmt.Sprintf("%.8f", math.Pi/2)
+	if have != want {
+		t.Errorf("\n have: %v \n want: %v", have, want)
+	}
 }

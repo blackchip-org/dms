@@ -70,24 +70,34 @@ func (p *Parser) ParseFields(v string) (Fields, error) {
 }
 
 func (p *Parser) Parse(v string) (Angle, error) {
+	var err error
+
 	parsed, err := p.ParseFields(v)
 	if err != nil {
 		return Angle{}, err
 	}
-	deg, err := strconv.ParseFloat(parsed.Deg, 64)
-	if err != nil {
-		return Angle{}, fmt.Errorf("invalid degrees: %v", parsed.Deg)
+
+	var deg, min, sec float64
+	if parsed.Deg != "" {
+		deg, err = strconv.ParseFloat(parsed.Deg, 64)
+		if err != nil {
+			return Angle{}, fmt.Errorf("invalid degrees: %v", parsed.Deg)
+		}
 	}
-	min, err := strconv.ParseFloat(parsed.Min, 64)
-	if err != nil {
-		return Angle{}, fmt.Errorf("invalid minutes: %v", parsed.Min)
+	if parsed.Min != "" {
+		min, err = strconv.ParseFloat(parsed.Min, 64)
+		if err != nil {
+			return Angle{}, fmt.Errorf("invalid minutes: %v", parsed.Min)
+		}
 	}
-	sec, err := strconv.ParseFloat(parsed.Sec, 64)
-	if err != nil {
-		return Angle{}, fmt.Errorf("invalid seconds: %v", parsed.Sec)
+	if parsed.Sec != "" {
+		sec, err = strconv.ParseFloat(parsed.Sec, 64)
+		if err != nil {
+			return Angle{}, fmt.Errorf("invalid seconds: %v", parsed.Sec)
+		}
 	}
 	switch parsed.Hemi {
-	case NorthType, EastType, "+":
+	case NorthType, EastType, "+", "":
 		// good
 	case SouthType, WestType, "-":
 		deg = deg * -1

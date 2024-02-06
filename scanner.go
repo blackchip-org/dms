@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	SignRule  = scan.NewClassRule(scan.Sign)
+	SignRule  = scan.NewClassRule(scan.IsSign)
 	DegRule   = scan.NewClassRule(scan.Rune('d', '°')).WithType(DegType)
 	MinRule   = scan.NewClassRule(scan.Rune('m', '\'', '′')).WithType(MinType)
 	SecRule   = scan.NewClassRule(scan.Rune('s', '"', '″')).WithType(SecType)
@@ -32,8 +32,8 @@ type Context struct {
 func NewContext() *Context {
 	c := &Context{}
 	c.RuleSet = scan.NewRuleSet(
-		scan.NewSpaceRule(scan.Whitespace),
-		scan.Real,
+		scan.SkipSpaceRule,
+		scan.RealRule,
 		SignRule,
 		DegRule, MinRule, SecRule,
 		EastRule, NorthRule, SouthRule, WestRule,

@@ -5,6 +5,8 @@ import (
 	"math"
 )
 
+const pi180 = math.Pi / 180.0
+
 type Fields struct {
 	Deg    string
 	Min    string
@@ -61,6 +63,11 @@ func (a Angle) Add(a2 Angle) Angle {
 	return a
 }
 
+func (a Angle) Sub(a2 Angle) Angle {
+	a2neg := Angle{deg: -a2.deg, min: -a2.min, sec: -a2.sec}
+	return a.Add(a2neg)
+}
+
 func (a Angle) Degrees() float64 {
 	return a.deg + (a.min / 60) + (a.sec / 3600)
 }
@@ -71,6 +78,10 @@ func (a Angle) Minutes() float64 {
 
 func (a Angle) Seconds() float64 {
 	return (a.deg * 3600) + (a.min * 60) + a.sec
+}
+
+func (a Angle) Radians() float64 {
+	return a.Degrees() * pi180
 }
 
 func (a Angle) DMS() (deg, min, sec float64) {
