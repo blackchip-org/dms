@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+type axis int
+
+const (
+	noAxis axis = iota
+	latAxis
+	lonAxis
+)
+
 type Formatter struct {
 	Deg    string
 	Min    string
@@ -21,7 +29,6 @@ func NewFormatter(to string, places int) Formatter {
 		Deg:    "°",
 		Min:    "′",
 		Sec:    "″",
-		Sign:   false,
 		Sep:    " ",
 		Places: places,
 		To:     to,
@@ -33,29 +40,24 @@ func (f Formatter) WithSymbols(deg string, min string, sec string) Formatter {
 	return f
 }
 
-func (f Formatter) WithSign(s bool) Formatter {
-	f.Sign = s
-	return f
-}
-
 func (f Formatter) WithSep(sep string) Formatter {
 	f.Sep = sep
 	return f
 }
 
-func (f Formatter) Format(lat Angle, lon Angle) (string, string) {
-	return f.format(lat, true), f.format(lon, false)
+func (f Formatter) Format(a Angle) string {
+	return f.format(a, noAxis)
 }
 
 func (f Formatter) FormatLat(a Angle) string {
-	return f.format(a, true)
+	return f.format(a, latAxis)
 }
 
 func (f Formatter) FormatLon(a Angle) string {
-	return f.format(a, false)
+	return f.format(a, lonAxis)
 }
 
-func (f Formatter) format(a Angle, lat bool) string {
+func (f Formatter) format(a Angle, axis axis) string {
 	deg, min, sec := a.DMS()
 	sign := 1
 	if deg < 0 {
@@ -63,7 +65,7 @@ func (f Formatter) format(a Angle, lat bool) string {
 	}
 
 	var buf strings.Builder
-	if !f.Sign {
+	if axis != noAxis {
 		deg = math.Abs(deg)
 	}
 
@@ -95,16 +97,16 @@ func (f Formatter) format(a Angle, lat bool) string {
 			fmt.Fprintf(&buf, "%v%v%v%v%v", mins, f.Min, f.Sep, secs, f.Sec)
 		}
 	}()
-	if !f.Sign {
+	if axis != noAxis {
 		var hemi string
 		switch {
-		case sign >= 0 && lat:
+		case sign >= 0 && axis == latAxis:
 			hemi = NorthType
-		case sign < 0 && lat:
+		case sign < 0 && axis == latAxis:
 			hemi = SouthType
-		case sign >= 0 && !lat:
+		case sign >= 0 && axis == lonAxis:
 			hemi = EastType
-		case sign < 0 && !lat:
+		case sign < 0 && axis == lonAxis:
 			hemi = WestType
 		default:
 			panic("unreachable")

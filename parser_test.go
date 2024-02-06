@@ -17,27 +17,27 @@ func TestParser(t *testing.T) {
 		{`1`, Fields{Deg: "1"}, ""},
 		{`+1`, Fields{Hemi: "+", Deg: "1"}, ""},
 		{`-1`, Fields{Hemi: "-", Deg: "1"}, ""},
-		{`1°`, Fields{Deg: "1"}, ""},
-		{`1d`, Fields{Deg: "1"}, ""},
-		{`1°N`, Fields{Deg: "1", Hemi: "N"}, ""},
-		{`1°S`, Fields{Deg: "1", Hemi: "S"}, ""},
-		{`1°E`, Fields{Deg: "1", Hemi: "E"}, ""},
-		{`1°W`, Fields{Deg: "1", Hemi: "W"}, ""},
-		{`1°2'`, Fields{Deg: "1", Min: "2"}, ""},
-		{`1°2′`, Fields{Deg: "1", Min: "2"}, ""},
-		{`1d2m`, Fields{Deg: "1", Min: "2"}, ""},
-		{`1°2'S`, Fields{Deg: "1", Min: "2", Hemi: "S"}, ""},
-		{`1°2'3"`, Fields{Deg: "1", Min: "2", Sec: "3"}, ""},
-		{`1°2′3″`, Fields{Deg: "1", Min: "2", Sec: "3"}, ""},
-		{`1°2′3″S`, Fields{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
-		{`1° 2′ 3″ S`, Fields{Deg: "1", Min: "2", Sec: "3", Hemi: "S"}, ""},
+		{`1°`, Fields{Deg: "1", DegSym: "°"}, ""},
+		{`1d`, Fields{Deg: "1", DegSym: "d"}, ""},
+		{`1°N`, Fields{Deg: "1", DegSym: "°", Hemi: "N"}, ""},
+		{`1°S`, Fields{Deg: "1", DegSym: "°", Hemi: "S"}, ""},
+		{`1°E`, Fields{Deg: "1", DegSym: "°", Hemi: "E"}, ""},
+		{`1°W`, Fields{Deg: "1", DegSym: "°", Hemi: "W"}, ""},
+		{`1°2'`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "'"}, ""},
+		{`1°2′`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "′"}, ""},
+		{`1d2m`, Fields{Deg: "1", DegSym: "d", Min: "2", MinSym: "m"}, ""},
+		{`1°2'S`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "'", Hemi: "S"}, ""},
+		{`1°2'3"`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "'", Sec: "3", SecSym: `"`}, ""},
+		{`1°2′3″`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "′", Sec: "3", SecSym: "″"}, ""},
+		{`1°2′3″S`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "′", Sec: "3", SecSym: "″", Hemi: "S"}, ""},
+		{`1° 2′ 3″ S`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "′", Sec: "3", SecSym: "″", Hemi: "S"}, ""},
 		{`1.2`, Fields{Deg: "1.2"}, ""},
-		{`1.2°`, Fields{Deg: "1.2"}, ""},
-		{`1.2°S`, Fields{Deg: "1.2", Hemi: "S"}, ""},
-		{`1°2.3'`, Fields{Deg: "1", Min: "2.3"}, ""},
-		{`1°2.3'S`, Fields{Deg: "1", Min: "2.3", Hemi: "S"}, ""},
-		{`1°2'3.4"`, Fields{Deg: "1", Min: "2", Sec: "3.4"}, ""},
-		{`1°2'3.4"S`, Fields{Deg: "1", Min: "2", Sec: "3.4", Hemi: "S"}, ""},
+		{`1.2°`, Fields{Deg: "1.2", DegSym: "°"}, ""},
+		{`1.2°S`, Fields{Deg: "1.2", DegSym: "°", Hemi: "S"}, ""},
+		{`1°2.3'`, Fields{Deg: "1", DegSym: "°", Min: "2.3", MinSym: "'"}, ""},
+		{`1°2.3'S`, Fields{Deg: "1", DegSym: "°", Min: "2.3", MinSym: "'", Hemi: "S"}, ""},
+		{`1°2'3.4"`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "'", Sec: "3.4", SecSym: `"`}, ""},
+		{`1°2'3.4"S`, Fields{Deg: "1", DegSym: "°", Min: "2", MinSym: "'", Sec: "3.4", SecSym: `"`, Hemi: "S"}, ""},
 		{`9223372036854775807`, Fields{Deg: "9223372036854775807"}, ""},
 
 		{`x`, Fields{}, `1:1: expected degree, got "x"`},
@@ -72,7 +72,7 @@ func TestParser(t *testing.T) {
 				t.Fatalf("\n have err: %v \n want err: %v", errMsg, test.err)
 			}
 			if angle != test.angle {
-				t.Errorf("\n have: %v \n want: %v", angle, test.angle)
+				t.Errorf("\n have: %+v \n want: %+v", angle, test.angle)
 			}
 		})
 	}

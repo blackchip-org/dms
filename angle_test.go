@@ -20,7 +20,7 @@ func TestDegrees(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.str, func(t *testing.T) {
+		t.Run(test.angle.String(), func(t *testing.T) {
 			str := fmt.Sprintf("%.6f", test.angle.Degrees())
 			if str != test.str {
 				t.Errorf("\n have: %v \n want: %v", str, test.str)

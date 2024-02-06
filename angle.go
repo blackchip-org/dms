@@ -1,14 +1,18 @@
 package dms
 
 import (
+	"fmt"
 	"math"
 )
 
 type Fields struct {
-	Deg  string
-	Min  string
-	Sec  string
-	Hemi string
+	Deg    string
+	Min    string
+	Sec    string
+	DegSym string
+	MinSym string
+	SecSym string
+	Hemi   string
 }
 
 type Angle struct {
@@ -40,6 +44,10 @@ func NewAngle(deg float64, min float64, sec float64) Angle {
 		min: min * sign,
 		sec: sec * sign,
 	})
+}
+
+func (a Angle) String() string {
+	return fmt.Sprintf("(%v,%v,%v)", a.deg, a.min, a.sec)
 }
 
 func (a Angle) Add(a2 Angle) Angle {

@@ -140,6 +140,7 @@ func parseDegIntSym(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
+		a.DegSym = tok.Val
 		r.Scan()
 		return 4, nil
 	}
@@ -151,6 +152,7 @@ func parseRealIntSym(r *scan.Runner, a *Fields) (int, error) {
 	tok := r.This
 	switch tok.Type {
 	case DegType:
+		a.DegSym = tok.Val
 		r.Scan()
 		return 6, nil
 	}
@@ -172,6 +174,7 @@ func parseMinNum(r *scan.Runner, a *Fields) (int, error) {
 		if tok.Type != MinType {
 			return -1, NewError(tok, "expected minute symbol, got %v", scan.Quote(tok.Lit))
 		}
+		a.MinSym = tok.Val
 		r.Scan()
 		return 5, nil
 	case RealType:
@@ -185,6 +188,7 @@ func parseMinNum(r *scan.Runner, a *Fields) (int, error) {
 		if tok.Type != MinType {
 			return -1, NewError(tok, "expected minute symbol, got %v", scan.Quote(tok.Lit))
 		}
+		a.MinSym = tok.Val
 		r.Scan()
 		return 6, nil
 	}
@@ -217,6 +221,7 @@ func parseSecNum(r *scan.Runner, a *Fields) (int, error) {
 	if tok.Type != SecType {
 		return -1, NewError(tok, "expected second symbol, got %v", scan.Quote(tok.Lit))
 	}
+	a.SecSym = tok.Val
 	r.Scan()
 
 	return 6, nil
