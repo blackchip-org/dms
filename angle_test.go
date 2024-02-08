@@ -6,6 +6,29 @@ import (
 	"testing"
 )
 
+func TestFieldsString(t *testing.T) {
+	tests := []struct {
+		fields Fields
+		str    string
+	}{
+		{Fields{Deg: "12"}, "12°"},
+		{Fields{Deg: "12", Min: "34"}, "12° 34′"},
+		{Fields{Deg: "12", Min: "34", Sec: "56.78"}, "12° 34′ 56.78″"},
+		{Fields{Deg: "12", Min: "34", Sec: "56.78", Hemi: "-"}, "-12° 34′ 56.78″"},
+		{Fields{Deg: "12", Min: "34", Sec: "56.78", Hemi: "S"}, "12° 34′ 56.78″ S"},
+		{Fields{Deg: "12", Min: "34", Sec: "56.78", DegSym: "d", MinSym: "'", SecSym: `"`}, `12d 34' 56.78"`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.str, func(t *testing.T) {
+			str := test.fields.String()
+			if str != test.str {
+				t.Errorf("\n have: %v \n want: %v", str, test.str)
+			}
+		})
+	}
+}
+
 func TestDegrees(t *testing.T) {
 	tests := []struct {
 		angle Angle

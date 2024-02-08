@@ -3,6 +3,7 @@ package dms
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 const pi180 = math.Pi / 180.0
@@ -15,6 +16,54 @@ type Fields struct {
 	MinSym string
 	SecSym string
 	Hemi   string
+}
+
+func (f Fields) IsDD() bool {
+	return f.Min == "" && f.Sec == ""
+}
+
+func (f Fields) IsDM() bool {
+	return f.Min != "" && f.Sec == ""
+}
+
+func (f Fields) IsDMS() bool {
+	return f.Min != "" && f.Sec != ""
+}
+
+func (f Fields) String() string {
+	var buf strings.Builder
+
+	sign := ""
+	if f.Hemi == "-" || f.Hemi == "+" {
+		sign = f.Hemi
+	}
+	degSym := f.DegSym
+	if degSym == "" {
+		degSym = "°"
+	}
+	fmt.Fprintf(&buf, "%v%v%v", sign, f.Deg, degSym)
+
+	if f.Min != "" {
+		minSym := f.MinSym
+		if minSym == "" {
+			minSym = "′"
+		}
+		fmt.Fprintf(&buf, " %v%v", f.Min, minSym)
+	}
+
+	if f.Sec != "" {
+		secSym := f.SecSym
+		if secSym == "" {
+			secSym = "″"
+		}
+		fmt.Fprintf(&buf, " %v%v", f.Sec, secSym)
+	}
+
+	if sign == "" && f.Hemi != "" {
+		fmt.Fprintf(&buf, " %v", f.Hemi)
+	}
+
+	return buf.String()
 }
 
 type Angle struct {
