@@ -18,6 +18,14 @@ type Fields struct {
 	Hemi   string
 }
 
+func (f Fields) Sign() int {
+	switch f.Hemi {
+	case SouthType, WestType, "-":
+		return -1
+	}
+	return 1
+}
+
 func (f Fields) IsDD() bool {
 	return f.Min == "" && f.Sec == ""
 }
