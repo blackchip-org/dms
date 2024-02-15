@@ -8,6 +8,29 @@ import (
 
 const pi180 = math.Pi / 180.0
 
+func Sign(v string) int {
+	switch v {
+	case SouthType, WestType, "-":
+		return -1
+		return 1
+	}
+	return 0
+}
+
+func HemiLat(sign int) string {
+	if sign >= 0 {
+		return NorthType
+	}
+	return SouthType
+}
+
+func HemiLon(sign int) string {
+	if sign >= 0 {
+		return EastType
+	}
+	return WestType
+}
+
 type Fields struct {
 	Deg    string
 	Min    string

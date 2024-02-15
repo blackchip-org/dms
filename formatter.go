@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/shopspring/decimal"
 )
 
 type axis int
@@ -55,6 +57,18 @@ func (f Formatter) FormatLat(a Angle) string {
 
 func (f Formatter) FormatLon(a Angle) string {
 	return f.format(a, lonAxis)
+}
+
+func (f Formatter) FormatFields(fields Fields) string {
+	return f.formatFields(fields, noAxis)
+}
+
+func (f Formatter) FormatLatFields(fields Fields) string {
+	return f.formatFields(fields, latAxis)
+}
+
+func (f Formatter) FormatLonFields(fields Fields) string {
+	return f.formatFields(fields, lonAxis)
 }
 
 func (f Formatter) format(a Angle, axis axis) string {
@@ -114,5 +128,83 @@ func (f Formatter) format(a Angle, axis axis) string {
 		fmt.Fprintf(&buf, "%v%v", f.Sep, hemi)
 	}
 	return buf.String()
+}
 
+func (f Formatter) formatFields(fields Fields, axis axis) string {
+	degSym := firstOf(f.Deg, fields.DegSym, "°")
+	minSym := firstOf(f.Min, fields.MinSym, "′")
+	secSym := firstOf(f.Sec, fields.SecSym, "″")
+
+	deg, min, sec := fields.Deg, fields.Min, fields.Sec
+	switch {
+	case f.To == DegType && f.Places >= 0:
+		ddeg, err := decimal.NewFromString(deg)
+		if err != nil {
+			panic(err)
+		}
+		deg = ddeg.Round(int32(f.Places)).String()
+	case f.To == MinType && f.Places >= 0:
+		dmin, err := decimal.NewFromString(min)
+		if err != nil {
+			panic(err)
+		}
+		min = dmin.Round(int32(f.Places)).String()
+	case f.To == SecType && f.Places >= 0:
+		dsec, err := decimal.NewFromString(sec)
+		if err != nil {
+			panic(err)
+		}
+		sec = dsec.Round(int32(f.Places)).String()
+	}
+	var buf strings.Builder
+
+	if f.Sign || axis == noAxis {
+		switch fields.Hemi {
+		case SouthType, WestType, "-":
+			buf.WriteByte('-')
+		}
+	}
+
+	buf.WriteString(deg)
+	buf.WriteString(degSym)
+
+	if f.To != DegType {
+		buf.WriteString(f.Sep)
+		buf.WriteString(min)
+		buf.WriteString(minSym)
+
+		if f.To != MinType {
+			buf.WriteString(f.Sep)
+			buf.WriteString(sec)
+			buf.WriteString(secSym)
+		}
+	}
+
+	if axis != noAxis {
+		var hemi string
+		switch {
+		case sign >= 0 && axis == latAxis:
+			hemi = NorthType
+		case sign < 0 && axis == latAxis:
+			hemi = SouthType
+		case sign >= 0 && axis == lonAxis:
+			hemi = EastType
+		case sign < 0 && axis == lonAxis:
+			hemi = WestType
+		default:
+			panic("unreachable")
+		}
+		buf.WriteString(f.Sep)
+		fmt.Fprintf(&buf, "%v%v", f.Sep, hemi)
+	}
+	return buf.String()
+}
+
+func firstOf(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
 }
