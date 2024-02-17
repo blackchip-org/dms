@@ -58,6 +58,50 @@ func TestFormat(t *testing.T) {
 	}
 }
 
+// func TestFormatFields(t *testing.T) {
+// 	var (
+// 		def  = NewFormatter(SecType, 1)
+// 		dms  = def.WithSymbols("d", "m", "")
+// 		dm   = NewFormatter(MinType, 3)
+// 		dd   = NewFormatter(DegType, 6)
+// 		ddn  = NewFormatter(DegType, -1)
+// 		mash = def.WithSep("")
+// 	)
+
+// 	tests := []struct {
+// 		f      *Formatter
+// 		fields Fields
+// 		result string
+// 	}{
+// 		{&def, Fields{Deg: "1"}, "1° 0′ 0.0″"},
+// 		{&def, Fields{Deg: "1", Min: "0", Sec: "0"}, "1° 0′ 0.0″"},
+// 		{&def, Fields{Deg: "1", Min: "2"}, "1° 2′ 0.0″"},
+// 		{&def, Fields{Deg: "1", Min: "2", Sec: "3.33"}, "1° 2′ 3.3″"},
+// 		{&def, Fields{Hemi: "-", Deg: "1", Min: "2", Sec: "3.33"}, "-1° 2′ 3.3″"},
+// 		{&def, Fields{Hemi: "S", Deg: "1", Min: "2", Sec: "3.33"}, "1° 2′ 3.3″ S"},
+// 		{&def, Fields{Deg: "-1", Min: "2", Sec: "3.36"}, "-1° 2′ 3.4″"},
+
+// 		{&dms, Fields{Deg: "11", Min: "22", Sec: "33.39"}, "11d 22m 33.4"},
+
+// 		{&dm, Fields{Deg: "1"}, "1° 0.000′"},
+// 		{&dm, Fields{Deg: "1", Min: "2"}, "1° 2.000′"},
+
+// 		{&dd, Fields{Deg: "1"}, "1.000000°"},
+
+// 		{&ddn, Fields{Deg: "1"}, "1°"},
+// 		{&mash, Fields{Deg: "1", Min: "2", Sec: "3.33"}, "1°2′3.3″"},
+// 	}
+
+// 	for _, test := range tests {
+// 		t.Run(test.result, func(t *testing.T) {
+// 			result := test.f.FormatFields(test.fields)
+// 			if result != test.result {
+// 				t.Errorf("\n have: [%v] \n want: [%v]\n", result, test.result)
+// 			}
+// 		})
+// 	}
+// }
+
 func TestFormatLat(t *testing.T) {
 	var (
 		def  = NewFormatter(SecType, 1)

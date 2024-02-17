@@ -4,16 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-
-	"github.com/shopspring/decimal"
-)
-
-type axis int
-
-const (
-	noAxis axis = iota
-	latAxis
-	lonAxis
 )
 
 type Formatter struct {
@@ -48,30 +38,18 @@ func (f Formatter) WithSep(sep string) Formatter {
 }
 
 func (f Formatter) Format(a Angle) string {
-	return f.format(a, noAxis)
+	return f.format(a, NoAxis)
 }
 
 func (f Formatter) FormatLat(a Angle) string {
-	return f.format(a, latAxis)
+	return f.format(a, LatAxis)
 }
 
 func (f Formatter) FormatLon(a Angle) string {
-	return f.format(a, lonAxis)
+	return f.format(a, LonAxis)
 }
 
-func (f Formatter) FormatFields(fields Fields) string {
-	return f.formatFields(fields, noAxis)
-}
-
-func (f Formatter) FormatLatFields(fields Fields) string {
-	return f.formatFields(fields, latAxis)
-}
-
-func (f Formatter) FormatLonFields(fields Fields) string {
-	return f.formatFields(fields, lonAxis)
-}
-
-func (f Formatter) format(a Angle, axis axis) string {
+func (f Formatter) format(a Angle, axis Axis) string {
 	deg, min, sec := a.DMS()
 	sign := 1
 	if deg < 0 {
@@ -79,7 +57,7 @@ func (f Formatter) format(a Angle, axis axis) string {
 	}
 
 	var buf strings.Builder
-	if axis != noAxis {
+	if axis != NoAxis {
 		deg = math.Abs(deg)
 	}
 
@@ -111,94 +89,69 @@ func (f Formatter) format(a Angle, axis axis) string {
 			fmt.Fprintf(&buf, "%v%v%v%v%v", mins, f.Min, f.Sep, secs, f.Sec)
 		}
 	}()
-	if axis != noAxis {
-		var hemi string
-		switch {
-		case sign >= 0 && axis == latAxis:
-			hemi = NorthType
-		case sign < 0 && axis == latAxis:
-			hemi = SouthType
-		case sign >= 0 && axis == lonAxis:
-			hemi = EastType
-		case sign < 0 && axis == lonAxis:
-			hemi = WestType
-		default:
-			panic("unreachable")
-		}
+	if axis != NoAxis {
+		hemi := Hemi(axis, sign)
 		fmt.Fprintf(&buf, "%v%v", f.Sep, hemi)
 	}
 	return buf.String()
 }
 
-func (f Formatter) formatFields(fields Fields, axis axis) string {
-	degSym := firstOf(f.Deg, fields.DegSym, "°")
-	minSym := firstOf(f.Min, fields.MinSym, "′")
-	secSym := firstOf(f.Sec, fields.SecSym, "″")
+// func (f Formatter) FormatFields(fields Fields) string {
+// 	degSym := firstOf(f.Deg, fields.DegSym)
+// 	minSym := firstOf(f.Min, fields.MinSym)
+// 	secSym := firstOf(f.Sec, fields.SecSym)
 
-	deg, min, sec := fields.Deg, fields.Min, fields.Sec
-	switch {
-	case f.To == DegType && f.Places >= 0:
-		ddeg, err := decimal.NewFromString(deg)
-		if err != nil {
-			panic(err)
-		}
-		deg = ddeg.Round(int32(f.Places)).String()
-	case f.To == MinType && f.Places >= 0:
-		dmin, err := decimal.NewFromString(min)
-		if err != nil {
-			panic(err)
-		}
-		min = dmin.Round(int32(f.Places)).String()
-	case f.To == SecType && f.Places >= 0:
-		dsec, err := decimal.NewFromString(sec)
-		if err != nil {
-			panic(err)
-		}
-		sec = dsec.Round(int32(f.Places)).String()
-	}
-	var buf strings.Builder
+// 	deg := firstOf(fields.Deg, "0")
+// 	min := firstOf(fields.Min, "0")
+// 	sec := firstOf(fields.Sec, "0")
 
-	if f.Sign || axis == noAxis {
-		switch fields.Hemi {
-		case SouthType, WestType, "-":
-			buf.WriteByte('-')
-		}
-	}
+// 	switch {
+// 	case f.To == DegType && f.Places >= 0:
+// 		ddeg, err := decimal.NewFromString(deg)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		deg = ddeg.StringFixed(int32(f.Places))
+// 	case f.To == MinType && f.Places >= 0:
+// 		dmin, err := decimal.NewFromString(min)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		min = dmin.StringFixed(int32(f.Places))
+// 	case f.To == SecType && f.Places >= 0:
+// 		dsec, err := decimal.NewFromString(sec)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		sec = dsec.StringFixed(int32(f.Places))
+// 	}
+// 	var buf strings.Builder
 
-	buf.WriteString(deg)
-	buf.WriteString(degSym)
+// 	if fields.Hemi == "-" {
+// 		buf.WriteString(fields.Hemi)
+// 	}
 
-	if f.To != DegType {
-		buf.WriteString(f.Sep)
-		buf.WriteString(min)
-		buf.WriteString(minSym)
+// 	buf.WriteString(deg)
+// 	buf.WriteString(degSym)
 
-		if f.To != MinType {
-			buf.WriteString(f.Sep)
-			buf.WriteString(sec)
-			buf.WriteString(secSym)
-		}
-	}
+// 	if f.To != DegType {
+// 		buf.WriteString(f.Sep)
+// 		buf.WriteString(min)
+// 		buf.WriteString(minSym)
 
-	if axis != noAxis {
-		var hemi string
-		switch {
-		case sign >= 0 && axis == latAxis:
-			hemi = NorthType
-		case sign < 0 && axis == latAxis:
-			hemi = SouthType
-		case sign >= 0 && axis == lonAxis:
-			hemi = EastType
-		case sign < 0 && axis == lonAxis:
-			hemi = WestType
-		default:
-			panic("unreachable")
-		}
-		buf.WriteString(f.Sep)
-		fmt.Fprintf(&buf, "%v%v", f.Sep, hemi)
-	}
-	return buf.String()
-}
+// 		if f.To != MinType {
+// 			buf.WriteString(f.Sep)
+// 			buf.WriteString(sec)
+// 			buf.WriteString(secSym)
+// 		}
+// 	}
+
+// 	if fields.Hemi != "" && fields.Hemi != "-" && fields.Hemi != "+" {
+// 		buf.WriteString(f.Sep)
+// 		buf.WriteString(fields.Hemi)
+// 	}
+// 	return buf.String()
+// }
 
 func firstOf(ss ...string) string {
 	for _, s := range ss {

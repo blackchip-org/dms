@@ -8,10 +8,21 @@ import (
 
 const pi180 = math.Pi / 180.0
 
+type Axis int
+
+const (
+	NoAxis Axis = iota
+	LatAxis
+	LonAxis
+)
+
 func Sign(v string) int {
 	switch v {
 	case SouthType, WestType, "-":
 		return -1
+	case NorthType, EastType, "+":
+		return 1
+	case "":
 		return 1
 	}
 	return 0
@@ -31,6 +42,16 @@ func HemiLon(sign int) string {
 	return WestType
 }
 
+func Hemi(axis Axis, sign int) string {
+	switch axis {
+	case LatAxis:
+		return HemiLat(sign)
+	case LonAxis:
+		return HemiLon(sign)
+	}
+	return ""
+}
+
 type Fields struct {
 	Deg    string
 	Min    string
@@ -39,14 +60,6 @@ type Fields struct {
 	MinSym string
 	SecSym string
 	Hemi   string
-}
-
-func (f Fields) Sign() int {
-	switch f.Hemi {
-	case SouthType, WestType, "-":
-		return -1
-	}
-	return 1
 }
 
 func (f Fields) IsDD() bool {
