@@ -112,7 +112,7 @@ func TestAngleAdd(t *testing.T) {
 		{NewAngle(-1, 15, 0), NewAngle(1, 15, 0), "0° 0′ 0.0″ N"},
 	}
 
-	f := NewFormatter(SecType, 1)
+	f := NewFormatter(SecUnit, 1)
 	for _, test := range tests {
 		c := test.a.Add(test.b)
 		str := f.FormatLat(c)
@@ -133,7 +133,7 @@ func TestAngleSub(t *testing.T) {
 		{NewAngle(-1, 15, 0), NewAngle(1, 15, 0), "2° 30′ 0.0″ S"},
 	}
 
-	f := NewFormatter(SecType, 1)
+	f := NewFormatter(SecUnit, 1)
 	for _, test := range tests {
 		c := test.a.Sub(test.b)
 		str := f.FormatLat(c)

@@ -6,12 +6,20 @@ import (
 	"strings"
 )
 
-const pi180 = math.Pi / 180.0
-
-type Axis int
+type Unit int
 
 const (
-	NoAxis Axis = iota
+	DegUnit Unit = iota
+	MinUnit
+	SecUnit
+)
+
+const pi180 = math.Pi / 180.0
+
+type axis int
+
+const (
+	NoAxis axis = iota
 	LatAxis
 	LonAxis
 )
@@ -42,8 +50,8 @@ func HemiLon(sign int) string {
 	return WestType
 }
 
-func Hemi(axis Axis, sign int) string {
-	switch axis {
+func hemi(a axis, sign int) string {
+	switch a {
 	case LatAxis:
 		return HemiLat(sign)
 	case LonAxis:

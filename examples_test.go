@@ -24,7 +24,7 @@ func Example_example2() {
 	if err != nil {
 		panic(err)
 	}
-	f := dms.NewFormatter(dms.MinType, 3)
+	f := dms.NewFormatter(dms.MinUnit, 3)
 	fmt.Println(f.FormatLat(a))
 
 	// Output:

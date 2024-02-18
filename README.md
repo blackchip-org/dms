@@ -36,7 +36,7 @@ contains the fields that were extracted. The parser uses the following rules:
 ### Formatting
 
 A formatter is creating with two parameters, the last unit to show (either
-`DegType`, `MinType`, or `SecType`), and the number of places for that last
+`DegUnit`, `MinUnit`, or `SecUnit`), and the number of places for that last
 unit. For example, to create a degrees and minutes formatter to 3 digits:
 
 ```go
@@ -45,7 +45,7 @@ unit. For example, to create a degrees and minutes formatter to 3 digits:
 	if err != nil {
 		panic(err)
 	}
-	f := dms.NewFormatter(dms.MinType, 3)
+	f := dms.NewFormatter(dms.MinUnit, 3)
 	fmt.Println(f.FormatLat(a))
 
 	// Output:
